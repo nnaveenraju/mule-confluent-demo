@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="593e257c-6297-41ef-825f-646184eaa48c" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="e8441090-e86d-44dd-a15f-512fd1527640" file="kafka-producer.yaml" />
+	<kafka:producer-config name="Apache_Kafka_Producer_configuration" doc:name="Apache Kafka Producer configuration" doc:id="0b03aea2-9fd3-45d2-b935-69b778822aa4" topic="sample2">
+		<kafka:producer-sasl-plain-connection username="${credentials.username}" password="${credentials.password}" endpointIdentificationAlgorithm="https" >
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+			<kafka:bootstrap-servers >
+				<kafka:bootstrap-server value="pkc-ep9mm.us-east-2.aws.confluent.cloud:9092" />
+			</kafka:bootstrap-servers>
+		</kafka:producer-sasl-plain-connection>
+	</kafka:producer-config>
+	
+	<kafka:consumer-config name="Apache_Kafka_Consumer_configuration" doc:name="Apache Kafka Consumer configuration" doc:id="69af217c-bff0-4dab-b965-f9c21f4f052f" >
+		<kafka:consumer-sasl-plain-connection username="${credentials.username}" password="${credentials.password}" endpointIdentificationAlgorithm="https">
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+			<kafka:bootstrap-servers >
+				<kafka:bootstrap-server value="pkc-ep9mm.us-east-2.aws.confluent.cloud:9092" />
+			</kafka:bootstrap-servers>
+			<kafka:topic-patterns >
+				<kafka:topic-pattern value="sample2" />
+			</kafka:topic-patterns>
+		</kafka:consumer-sasl-plain-connection>
+	</kafka:consumer-config>
+	<flow name="kafka-sampleFlow" doc:id="3a3760a7-dee7-4ff9-bfa6-bc2e8eb575b2" >
+		<http:listener doc:name="Listener" doc:id="ac16f9a3-e37d-4377-91d8-9fc1359bf075" config-ref="HTTP_Listener_config" path="/produce"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e638be80-8700-41c7-b98d-59a358010f69" message="#[payload]"/>
+		<kafka:publish doc:name="Publish" doc:id="2e13782e-b3ac-4a60-a220-76876abf5748" config-ref="Apache_Kafka_Producer_configuration" topic="sample2"/>
+		<ee:transform doc:name="Transform Message" doc:id="b110aa24-0ffe-44be-a2c6-4a57f9bf4867">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="kafka-sampleFlow2" doc:id="334248f4-fc1f-46fb-9b6b-1352d4ca765a" >
+		<kafka:message-listener doc:name="Message listener" doc:id="e46a9fa6-a0ac-4de3-8788-716b5a08a765" config-ref="Apache_Kafka_Consumer_configuration" ackMode="AUTO"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ad452d02-ff3f-4996-954a-e7e7586873e7" message="#[payload]"/>
+	</flow>
+</mule>

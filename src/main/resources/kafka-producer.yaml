@@ -1,0 +1,18 @@
+bootstrap:
+  servers "pkc-lzvrd.us-west4.gcp.confluent.cloud:9092"
+ssl:
+  endpoint:
+    identification:
+      algorithm: "https"
+security:
+  protocol: "SASL_SSL"
+sasl:
+  mechanism: "PLAIN"
+  jaas:
+    config2: "org.apache.kafka.common.security.plain.PlainLoginModule required username='<<username>>' password='<<password>>'"
+    config: "org.apache.kafka.common.security.plain.PlainLoginModule required username='**************' password='*****************+r20fU1hd5FTlWfZ'"
+    
+credentials:
+  username: "IBJGJF88888*****"
+  password: "+ubmfr16tPDW***************j"
+
